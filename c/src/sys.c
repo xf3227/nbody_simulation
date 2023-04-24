@@ -7,61 +7,23 @@ data_t fRand(data_t fMin, data_t fMax) {
 }
 
 /* just allocate memory for a system */
-System sys_empty(long N, enum MemLocation loc) {
+System sys_empty(long N) {
     System sys;
     sys.N = N;
-    if (loc == HOST) {
-        sys.m = (data_t *) malloc(N * sizeof(data_t));
-        sys.s = (data_t *) malloc(N * NUM_DIMS * sizeof(data_t));
-        sys.v = (data_t *) malloc(N * NUM_DIMS * sizeof(data_t));
-        sys.a = (data_t *) malloc(N * NUM_DIMS * sizeof(data_t));
-    } 
-    else if (loc == DEVICE) {
-        cudaError_t err;
-        err = cudaMalloc((void **)&sys.m, N * sizeof(data_t));
-        if (err != cudaSuccess) {
-            printf("Error: %s\n", cudaGetErrorString(err));
-        }
-        err = cudaMalloc((void **)&sys.s, N * NUM_DIMS * sizeof(data_t));
-        if (err != cudaSuccess) {
-            printf("Error: %s\n", cudaGetErrorString(err));
-        }
-        err = cudaMalloc((void **)&sys.v, N * NUM_DIMS * sizeof(data_t));
-        if (err != cudaSuccess) {
-            printf("Error: %s\n", cudaGetErrorString(err));
-        }
-        err = cudaMalloc((void **)&sys.a, N * NUM_DIMS * sizeof(data_t));
-        if (err != cudaSuccess) {
-            printf("Error: %s\n", cudaGetErrorString(err));
-        }
-    }
+    sys.m = (data_t *) malloc(N * sizeof(data_t));
+    sys.s = (data_t *) malloc(N * NUM_DIMS * sizeof(data_t));
+    sys.v = (data_t *) malloc(N * NUM_DIMS * sizeof(data_t));
+    sys.a = (data_t *) malloc(N * NUM_DIMS * sizeof(data_t));
     return sys;
 }
 
 /* generate a copy of the source system */
-System sys_copy(System src, enum cudaMemcpyKind kind) {
-    enum MemLocation loc = HOST;
-    if (kind == cudaMemcpyHostToDevice || kind == cudaMemcpyDeviceToDevice) {
-        loc = DEVICE;
-    }
-    System sys = sys_empty(src.N, loc);
-    cudaError_t err;
-    err = cudaMemcpy(sys.m, src.m, src.N * sizeof(data_t), kind);
-    if (err != cudaSuccess) {
-        printf("Error: %s\n", cudaGetErrorString(err));
-    }
-    err = cudaMemcpy(sys.s, src.s, src.N * NUM_DIMS * sizeof(data_t), kind);
-    if (err != cudaSuccess) {
-        printf("Error: %s\n", cudaGetErrorString(err));
-    }
-    err = cudaMemcpy(sys.v, src.v, src.N * NUM_DIMS * sizeof(data_t), kind);
-    if (err != cudaSuccess) {
-        printf("Error: %s\n", cudaGetErrorString(err));
-    }
-    err = cudaMemcpy(sys.a, src.a, src.N * NUM_DIMS * sizeof(data_t), kind);
-    if (err != cudaSuccess) {
-        printf("Error: %s\n", cudaGetErrorString(err));
-    }
+System sys_copy(System src) {
+    System sys = sys_empty(src.N);
+    memcpy(sys.m, src.m, src.N * sizeof(data_t));
+    memcpy(sys.s, src.s, src.N * NUM_DIMS * sizeof(data_t));
+    memcpy(sys.v, src.v, src.N * NUM_DIMS * sizeof(data_t));
+    memcpy(sys.a, src.a, src.N * NUM_DIMS * sizeof(data_t)); 
     return sys;
 }
 
@@ -72,7 +34,7 @@ System sys_rand(
     data_t s_min, data_t s_max,
     data_t v_min, data_t v_max
 ) {
-    System sys = sys_empty(N, HOST);
+    System sys = sys_empty(N);
     
     // initialize with random values
     for (long i = 0; i < N; i++)
@@ -89,7 +51,7 @@ System sys_rand(
 /* barycenter is fixed at (0, 0) */
 System sys_waltz(data_t m0, data_t m1, data_t r) {
     long N = 2;
-    System sys = sys_empty(N, HOST);
+    System sys = sys_empty(N);
 
     // set masses
     sys.m[0] = m0;

@@ -6,8 +6,6 @@
 #include <immintrin.h>
 #include <omp.h>
 #include <string.h>
-#include <cuda_runtime.h>
-#include <cublas_v2.h>
 
 #ifndef NBODY_H
 #define NBODY_H
@@ -31,6 +29,16 @@ typedef struct System {
     data_t *a;  // accelerations
 } System;
 
+typedef struct OctreeNode {
+    data_t lower_bound[NUM_DIMS];
+    data_t upper_bound[NUM_DIMS];
+    struct OctreeNode *children[1 << NUM_DIMS];
+    data_t mass;
+    data_t center_of_mass[NUM_DIMS];
+    int is_leaf;
+    long body_index;
+} OctreeNode;
+
 enum MemLocation {
     HOST,
     DEVICE
@@ -41,8 +49,8 @@ enum MemLocation {
 // void sys_momentum(data_t *m, data_t *s, data_t *v, data_t *ans);
 
 /* different system initial states  */
-System sys_empty(long N, enum MemLocation loc);
-System sys_copy(System src, enum cudaMemcpyKind kind);
+System sys_empty(long N);
+System sys_copy(System src);
 System sys_rand(
     long N,
     data_t m_min, data_t m_max,
@@ -58,16 +66,8 @@ void sim_omp_v00(System sys, System buf, data_t delta);
 void sim_cpu_v01(System sys, System buf, data_t delta);
 void sim_cpu_v02(System sys, System buf, data_t delta, long step);
 void sim_cpu_v03(System sys, System buf, data_t delta, long step);
+void sim_cpu_v04(System sys, System buf, data_t delta, double theta);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void sim_gpu_v00(System sys, System buf, data_t delta);
-
-#ifdef __cplusplus
-}
-#endif
 
 /* misc */
 void swap_ptr(data_t **a, data_t **b);
