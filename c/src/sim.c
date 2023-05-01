@@ -27,7 +27,7 @@ void acc_cpu(System sys) {
             data_t r_p1 = sqrt(r_p2);  
 
             // raise to the 3rd power, and divides mass
-            data_t tmp = sys.m[_j] / (r_p1 * r_p2);
+            data_t tmp = sys.m[_j] / (r_p1 * r_p2 + 1e-6);
 
             // update acceleration vector
             ax += tmp * rx;

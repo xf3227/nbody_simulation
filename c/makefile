@@ -19,7 +19,10 @@ OBJS_CU = $(patsubst $(SRC_DIR)/%.cu, $(OBJ_DIR)/%.o, $(SRCS_CU))
 
 .PHONY: all clean
 
-all: $(BIN_DIR)/nbody $(LIB_DIR)/nbody.so
+all: $(BIN_DIR)/nbody $(BIN_DIR)/test_performance $(LIB_DIR)/nbody.so
+
+$(BIN_DIR)/test_performance: $(OBJS_C) $(OBJS_CU)
+	$(NVCC) $^ -o $@ $(LDFLAGS)
 
 $(BIN_DIR)/nbody: $(OBJS_C) $(OBJS_CU)
 	$(NVCC) $^ -o $@ $(LDFLAGS)
